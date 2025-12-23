@@ -60,8 +60,10 @@ CONTENT: Dict[int, Dict[str, Any]] = {
                 "next": True,
             },
             {
-                "type": "text",
-                "text": (
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAP7aUqVCWH61Kd1ai1q5VvvCVGojF0AAvkLaxu_5FhK2oCzWwABnR14AQADAgADeQADNgQ",
+                "caption":
+                  (
                     "Вайбик (да, бигль) шёл по снегу…\n\n"
                     "и нашёл <b>потерянную варежку</b> 🧤\n\n"
                     "Она была тёплая, будто её только что уронили.\n\n"
