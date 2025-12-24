@@ -33,6 +33,12 @@ DB_PATH = "advent.sqlite"
 # Можно задать file_id для прогресс-фото, чтобы Telegram брал картинку из кеша
 PROGRESS_PHOTO_ID = os.getenv("PROGRESS_PHOTO_ID", "").strip()
 
+DAY3_M1_PHOTO_ID = os.getenv("DAY3_M1_PHOTO_ID", "").strip()
+DAY3_M4_PHOTO_ID = os.getenv("DAY3_M4_PHOTO_ID", "").strip()
+
+DAY3_M1_PHOTO_META = {"file_id": DAY3_M1_PHOTO_ID} if DAY3_M1_PHOTO_ID else {"file": "media/img4.png"}
+DAY3_M4_PHOTO_META = {"file_id": DAY3_M4_PHOTO_ID} if DAY3_M4_PHOTO_ID else {"file": "media/img5.png"}
+
 # ВАЖНО: parse_mode="HTML" задан по умолчанию для всего бота
 bot = Bot(
     token=TOKEN,
@@ -192,9 +198,77 @@ CONTENT: Dict[int, Dict[str, Any]] = {
             },
         ],
     },
-    3: {"title": "День 3 — (заполни)", "spark_name": "Искра №3", "code_part": "C3", "steps": [
-        {"type":"text","text":"День 3 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
-    ]},
+    3: {
+        "title": "День 3 — «След памяти»",
+        "spark_name": "Искра №3",
+        "code_part": "C3",
+        "steps": [
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAgACAgIAAxkBAAIBamlMd0nq52EQ5nvz07Gi-5c2GwRHAAJyE2sb_gdhSu0nBBbcnKjLAQADAgADeQADNgQAxkBAAOXaUglTZimhXKMTBPxQ3wFMoXaTjkAAgMPaxt2VUFKWeaxTfdixPcBAAMCAAN5AAM2BA",
+                "caption": (
+                    "Привет 🌸\n"
+                    "Сегодня Вайбик идёт медленно.\n"
+                    "Он заметил, что на снегу\n"
+                    "остаются следы — и каждый из них что-то хранит."
+                ),
+                "next": True,
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Вайбик понял одну вещь:\n"
+                    "не всё, что важно, видно глазами.\n\n"
+                    "Иногда после тебя остаётся\n"
+                    "след памяти —\n"
+                    "ощущение,\n"
+                    "запах,\n"
+                    "чувство.\n\n"
+                    "И сегодня он учится оставлять именно такой след."
+                ),
+                "next": True,
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Вайбик говорит, что у каждого дня\n"
+                    "есть свой аромат.\n\n"
+                    "Какой сегодня ближе тебе? 👇"
+                ),
+                "buttons": [
+                    {"text": "🌸 Цветочный и нежный", "action": "aroma", "value": "floral"},
+                    {"text": "🌿 Свежий и спокойный", "action": "aroma", "value": "fresh"},
+                    {"text": "🍊 Тёплый и уютный", "action": "aroma", "value": "warm"},
+                    {"text": "✨ Загадочный и вечерний", "action": "aroma", "value": "mystery"},
+                ],
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Вайбик остановился, вдохнул глубже…\n"
+                    "и в этом аромате появилась\n"
+                    "третья Искра ✨"
+                ),
+                "no_menu": True
+            },
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAIBbGlMeQS9YPjRH9w-_GEGbf1_oTnoAAJzE2sb_gdhSljP74T9LdyaAQADAgADeQADNgQ",
+                "caption": (
+                    "✨ Искра №3 найдена\n\n"
+                    "Вайбик говорит:\n"
+                    "«Ароматы — это воспоминания, которые можно носить с собой».\n\n"
+                    "Поэтому сегодня — подарок для тебя 🌸\n"
+                    "сертификат на духи ETIB\n"
+                    "чтобы ты выбрала аромат,\n"
+                    "который захочешь оставить после себя."
+                ),
+                "buttons": [
+                    {"text": "✨ Забрать Искру", "action": "get_spark"},
+                ],
+            },
+        ],
+    },
     4: {"title": "День 4 — (заполни)", "spark_name": "Искра №4", "code_part": "D4", "steps": [
         {"type":"text","text":"День 4 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
     ]},
@@ -394,6 +468,8 @@ def build_step_kb(day: int, step_idx: int, step: Dict[str, Any], total_steps: in
                 kb.button(text=text, callback_data=f"mode:{day}:{step_idx}:{b['value']}")
             elif action == "glow":
                 kb.button(text=text, callback_data=f"glow:{day}:{step_idx}:{b['value']}")
+            elif action == "aroma":
+                kb.button(text=text, callback_data=f"aroma:{day}:{step_idx}:{b['value']}")
             elif action == "get_spark":
                 kb.button(text=text, callback_data=f"spark:{day}")
             elif action == "menu":
@@ -658,6 +734,35 @@ async def cb_glow(c: CallbackQuery):
     await send_step(c.from_user.id, day, step_idx + 2)
 
     await c.answer("Сияние активировано ✨")
+
+@dp.callback_query(F.data.startswith("aroma:"))
+async def cb_aroma(c: CallbackQuery):
+    # aroma:day:step:value
+    _, day_s, step_s, _choice = c.data.split(":")
+    day = int(day_s)
+    step_idx = int(step_s)
+
+    user = await db_get_user(c.from_user.id)
+    if not user:
+        await c.answer("Нажми /start 🙂", show_alert=True)
+        return
+
+    if user["active_day"] != day or user["active_step"] != step_idx:
+        await c.answer("Эта кнопка уже неактуальна 🙂", show_alert=False)
+        return
+
+    try:
+        await c.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+
+    await db_set_progress(c.from_user.id, active_day=day, active_step=step_idx + 1)
+    await send_step(c.from_user.id, day, step_idx + 1)
+
+    await db_set_progress(c.from_user.id, active_day=day, active_step=step_idx + 2)
+    await send_step(c.from_user.id, day, step_idx + 2)
+
+    await c.answer("Аромат сохранён 🌸")
 
 @dp.callback_query(F.data.startswith("spark:"))
 async def cb_spark(c: CallbackQuery):
