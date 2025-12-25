@@ -201,7 +201,7 @@ CONTENT: Dict[int, Dict[str, Any]] = {
     3: {
         "title": "День 3 — «След памяти»",
         "spark_name": "Искра №3",
-        "code_part": "C3",
+        "code_part": "Б",
         "steps": [
             {
                 "type": "photo",
