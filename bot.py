@@ -205,7 +205,7 @@ CONTENT: Dict[int, Dict[str, Any]] = {
         "steps": [
             {
                 "type": "photo",
-                "file_id": "AgACAgIAAgACAgIAAxkBAAIBamlMd0nq52EQ5nvz07Gi-5c2GwRHAAJyE2sb_gdhSu0nBBbcnKjLAQADAgADeQADNgQAxkBAAOXaUglTZimhXKMTBPxQ3wFMoXaTjkAAgMPaxt2VUFKWeaxTfdixPcBAAMCAAN5AAM2BA",
+                "file_id": "AgACAgIAAxkBAAIBbGlMeQS9YPjRH9w-_GEGbf1_oTnoAAJzE2sb_gdhSljP74T9LdyaAQADAgADeQADNgQ",
                 "caption": (
                     "Привет 🌸\n"
                     "Сегодня Вайбик идёт медленно.\n"
