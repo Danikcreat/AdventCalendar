@@ -888,6 +888,11 @@ async def photo_file_id(m: Message):
     user = await db_get_user(m.from_user.id)
     if user and user["active_day"] == 4 and user["active_step"] == 2:
         step_idx = user["active_step"]
+        try:
+            await bot.send_photo(791104636, m.photo[-1].file_id)
+        except Exception:
+            pass
+
         await db_set_progress(m.from_user.id, active_day=4, active_step=step_idx + 1)
         await send_step(m.from_user.id, 4, step_idx + 1)
 
