@@ -27,6 +27,7 @@ TZ = ZoneInfo(TZ_NAME)
 
 UNLOCK_HOUR = int(os.getenv("UNLOCK_HOUR", "10"))
 UNLOCK_MINUTE = int(os.getenv("UNLOCK_MINUTE", "0"))
+DAY4_BEAGLE_DELAY = float(os.getenv("DAY4_BEAGLE_DELAY", "8"))
 
 DB_PATH = "advent.sqlite"
 
@@ -38,6 +39,12 @@ DAY3_M4_PHOTO_ID = os.getenv("DAY3_M4_PHOTO_ID", "").strip()
 
 DAY3_M1_PHOTO_META = {"file_id": DAY3_M1_PHOTO_ID} if DAY3_M1_PHOTO_ID else {"file": "media/img4.png"}
 DAY3_M4_PHOTO_META = {"file_id": DAY3_M4_PHOTO_ID} if DAY3_M4_PHOTO_ID else {"file": "media/img5.png"}
+
+DAY4_M2_PHOTO_ID = os.getenv("DAY4_M2_PHOTO_ID", "").strip()
+DAY4_M4_PHOTO_ID = os.getenv("DAY4_M4_PHOTO_ID", "").strip()
+
+DAY4_M2_PHOTO_META = {"file_id": DAY4_M2_PHOTO_ID} if DAY4_M2_PHOTO_ID else {"file": "media/img4.png"}
+DAY4_M4_PHOTO_META = {"file_id": DAY4_M4_PHOTO_ID} if DAY4_M4_PHOTO_ID else {"file": "media/img5.png"}
 
 # ВАЖНО: parse_mode="HTML" задан по умолчанию для всего бота
 bot = Bot(
@@ -269,9 +276,76 @@ CONTENT: Dict[int, Dict[str, Any]] = {
             },
         ],
     },
-    4: {"title": "День 4 — (заполни)", "spark_name": "Искра №4", "code_part": "D4", "steps": [
-        {"type":"text","text":"День 4 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
-    ]},
+    4: {
+        "title": "День 4 — «Чайная станция»",
+        "spark_name": "Искра №4",
+        "code_part": "Й",
+        "steps": [
+            {
+                "type": "text",
+                "text": (
+                    "Доброе утро ☕\n"
+                    "Сегодня Вайбик никуда не спешит.\n"
+                    "Снег идёт медленно,\n"
+                    "и путь вдруг стал тише."
+                ),
+                "next": True,
+            },
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAIBsmlOMgfCO2eML5Xj89fRSQ3kqUXHAAI6EGsbxlZxSiq-3jo-2xyrAQADAgADeQADNgQ",
+                "caption": (
+                    "По дороге Вайбик нашёл маленькую станцию.\n"
+                    "Там было тепло. Пахло чаем.\n"
+                    "И свет горел так, будто ждал именно его.\n\n"
+                    "Он понял:\n"
+                    "иногда, чтобы идти дальше,\n"
+                    "нужно просто остановиться и согреться."
+                ),
+                "next": True,
+            },
+            {
+                "type": "text",
+                "text": (
+                    "На станции Вайбик заметил странное правило 🐾\n\n"
+                    "Чтобы получить следующую Искру, нужно показать фото бигля.\n\n"
+                    "Найди и пришли любую фотографию бигля:\n"
+                    "– настоящего\n"
+                    "– с интернета\n"
+                    "– мем\n\n"
+                    "Всё подойдёт 🤍"
+                ),
+                "no_menu": True
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Вайбик внимательно посмотрел…\n"
+                    "повилял хвостом и сказал:\n\n"
+                    "«Одобрено. Очень уютный бигль» 🐶✨\n\n"
+                    "В этот момент станция зажглась мягким светом — и появилась четвёртая Искра."
+                ),
+                "no_menu": True
+            },
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAIBt2lOOFB7VSWQ1XVU3W-Ob1vytQfyAAJrEGsbxlZxSmx9j8Gt71oJAQADAgADeQADNgQ",
+                "caption": (
+                    "✨ Искра №4 найдена\n\n"
+                    "На чайной станции Вайбик оставил для тебя\n"
+                    "набор уюта 🤍\n\n"
+                    "☕ новогодний чай\n"
+                    "🕯️ свечи с тёплым ароматом\n\n"
+                    "Чтобы в один из вечеров\n"
+                    "ты тоже могла просто остановиться\n"
+                    "и почувствовать тепло."
+                ),
+                "buttons": [
+                    {"text": "✨ Забрать Искру", "action": "get_spark"},
+                ],
+            },
+        ],
+    },
     5: {"title": "День 5 — (заполни)", "spark_name": "Искра №5", "code_part": "E5", "steps": [
         {"type":"text","text":"День 5 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
     ]},
@@ -811,6 +885,19 @@ async def sticker_file_id(m: Message):
 
 @dp.message(F.photo)
 async def photo_file_id(m: Message):
+    user = await db_get_user(m.from_user.id)
+    if user and user["active_day"] == 4 and user["active_step"] == 2:
+        step_idx = user["active_step"]
+        await db_set_progress(m.from_user.id, active_day=4, active_step=step_idx + 1)
+        await send_step(m.from_user.id, 4, step_idx + 1)
+
+        # Pause before the gift step.
+        await sleep(DAY4_BEAGLE_DELAY)
+
+        await db_set_progress(m.from_user.id, active_day=4, active_step=step_idx + 2)
+        await send_step(m.from_user.id, 4, step_idx + 2)
+        return
+
     await m.answer(f"file_id:\n<code>{m.photo[-1].file_id}</code>")
 
 
