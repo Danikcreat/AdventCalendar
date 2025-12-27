@@ -46,6 +46,12 @@ DAY4_M4_PHOTO_ID = os.getenv("DAY4_M4_PHOTO_ID", "").strip()
 DAY4_M2_PHOTO_META = {"file_id": DAY4_M2_PHOTO_ID} if DAY4_M2_PHOTO_ID else {"file": "media/img4.png"}
 DAY4_M4_PHOTO_META = {"file_id": DAY4_M4_PHOTO_ID} if DAY4_M4_PHOTO_ID else {"file": "media/img5.png"}
 
+DAY5_M2_PHOTO_ID = os.getenv("DAY5_M2_PHOTO_ID", "").strip()
+DAY5_M4_PHOTO_ID = os.getenv("DAY5_M4_PHOTO_ID", "").strip()
+
+DAY5_M2_PHOTO_META = {"file_id": DAY5_M2_PHOTO_ID} if DAY5_M2_PHOTO_ID else {"file": "media/img4.png"}
+DAY5_M4_PHOTO_META = {"file_id": DAY5_M4_PHOTO_ID} if DAY5_M4_PHOTO_ID else {"file": "media/img5.png"}
+
 # ВАЖНО: parse_mode="HTML" задан по умолчанию для всего бота
 bot = Bot(
     token=TOKEN,
@@ -346,9 +352,60 @@ CONTENT: Dict[int, Dict[str, Any]] = {
             },
         ],
     },
-    5: {"title": "День 5 — (заполни)", "spark_name": "Искра №5", "code_part": "E5", "steps": [
-        {"type":"text","text":"День 5 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
-    ]},
+    5: {
+        "title": "День 5 — «Карта желаний»",
+        "spark_name": "Искра №5",
+        "code_part": "И",
+        "steps": [
+            {
+                "type": "text",
+                "text": (
+                    "Сегодня Вайбик остановился.\n"
+                    "Не потому что устал, а потому что понял —\n"
+                    "дальше хочется идти осознанно."
+                ),
+                "next": True,
+            },
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAICAAFpTx70-jwiW3sPlC70nek0r4YzHgACFRJrG8ZWeUprgvympa2hTgEAAwIAA3kAAzYE",
+                "caption": (
+                    "Рядом лежала карта.\n"
+                    "Не как у путешественников.\n"
+                    "А как у людей, которые хотят понять,\n"
+                    "куда им на самом деле хочется."
+                ),
+                "next": True,
+            },
+            {
+                "type": "text",
+                "text": (
+                    "На ней не было маршрутов,\n"
+                    "дедлайнов или чужих ожиданий.\n\n"
+                    "Только место для твоих мыслей.\n"
+                    "И твоих “хочу”."
+                ),
+                "next": True,
+            },
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAICAmlPJYlGnv_0v3DFvvTy3yX3xhb6AAIWEmsbxlZ5SomUO4YWzC4KAQADAgADeQADNgQ",
+                "caption": (
+                    "✨ Искра №5 появилась\n\n"
+                    "Сегодняшний подарок —\n"
+                    "настоящая карта желаний 💌\n\n"
+                    "Ты можешь делать с ней всё, как тебе удобно:\n"
+                    "– заполнять сразу\n"
+                    "– возвращаться иногда\n"
+                    "– или просто держать рядом\n\n"
+                    "Дальше идти будет проще, когда знаешь, чего тебе хочется. 🤍"
+                ),
+                "buttons": [
+                    {"text": "✨ Забрать Искру", "action": "get_spark"},
+                ],
+            },
+        ],
+    },
     6: {"title": "День 6 — (заполни)", "spark_name": "Искра №6", "code_part": "F6", "steps": [
         {"type":"text","text":"День 6 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
     ]},
@@ -687,7 +744,7 @@ async def cb_progress(c: CallbackQuery):
         f"✨ <b>Твой прогресс</b>\n\n"
         f"Открыто дней: <b>{opened_day}/7</b>\n"
         f"Искры: <b>{len(sparks)}/7</b>\n"
-        f"Буквы: <b>{len(codes)}/7</b>\n\n"
+        f"Буквы: <b>{len(codes)}/6</b>\n\n"
         f"Буквы: {', '.join(codes) if sparks else 'пока нет'}"
     )
     media_meta = {"file_id": PROGRESS_PHOTO_ID} if PROGRESS_PHOTO_ID else {"file": "media/img1.png"}
