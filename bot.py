@@ -15,6 +15,8 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.client.default import DefaultBotProperties
 
+from maintenance import MaintenanceMiddleware, DEFAULT_MAINTENANCE_TEXT
+
 # ----------------------------
 # 1) ENV / BOT INIT
 # ----------------------------
@@ -33,6 +35,9 @@ DAY6_LETTER_DELAY = float(os.getenv("DAY6_LETTER_DELAY", "6"))
 DAY6_ANSWER_MIN_LEN = int(os.getenv("DAY6_ANSWER_MIN_LEN", "20"))
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "791104636").strip() or "791104636")
 BROADCAST_DELAY = float(os.getenv("BROADCAST_DELAY", "0.05"))
+MAINTENANCE_MODE = os.getenv("MAINTENANCE_MODE", "0").strip() == "1"
+MAINTENANCE_TEXT = os.getenv("MAINTENANCE_TEXT", DEFAULT_MAINTENANCE_TEXT).strip()
+MAINTENANCE_PHOTO_ID = os.getenv("MAINTENANCE_PHOTO_ID", "").strip() or None
 
 DB_PATH = "advent.sqlite"
 
@@ -63,6 +68,8 @@ bot = Bot(
     default=DefaultBotProperties(parse_mode="HTML")  # parse_mode="HTML"
 )
 dp = Dispatcher()
+dp.message.middleware(MaintenanceMiddleware(MAINTENANCE_MODE, MAINTENANCE_TEXT, MAINTENANCE_PHOTO_ID))
+dp.callback_query.middleware(MaintenanceMiddleware(MAINTENANCE_MODE, MAINTENANCE_TEXT, MAINTENANCE_PHOTO_ID))
 
 # ----------------------------
 # 2) CONTENT (7 DAYS)
