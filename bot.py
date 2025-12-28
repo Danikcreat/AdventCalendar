@@ -1,4 +1,5 @@
 import os
+import html
 import asyncio
 from asyncio import sleep
 from dataclasses import dataclass
@@ -28,6 +29,10 @@ TZ = ZoneInfo(TZ_NAME)
 UNLOCK_HOUR = int(os.getenv("UNLOCK_HOUR", "10"))
 UNLOCK_MINUTE = int(os.getenv("UNLOCK_MINUTE", "0"))
 DAY4_BEAGLE_DELAY = float(os.getenv("DAY4_BEAGLE_DELAY", "8"))
+DAY6_LETTER_DELAY = float(os.getenv("DAY6_LETTER_DELAY", "6"))
+DAY6_ANSWER_MIN_LEN = int(os.getenv("DAY6_ANSWER_MIN_LEN", "20"))
+ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "791104636").strip() or "791104636")
+BROADCAST_DELAY = float(os.getenv("BROADCAST_DELAY", "0.05"))
 
 DB_PATH = "advent.sqlite"
 
@@ -406,11 +411,85 @@ CONTENT: Dict[int, Dict[str, Any]] = {
             },
         ],
     },
-    6: {"title": "День 6 — (заполни)", "spark_name": "Искра №6", "code_part": "F6", "steps": [
-        {"type":"text","text":"День 6 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
-    ]},
-    7: {"title": "День 7 — (заполни)", "spark_name": "Искра №7", "code_part": "G7", "steps": [
-        {"type":"text","text":"День 7 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]}
+    6: {
+        "title": "День 6 — «Письмо в будущее»",
+        "spark_name": "Искра №6",
+        "code_part": "К",
+        "steps": [
+            {
+                "type": "text",
+                "text": (
+                    "Сегодня Вайбик понял кое-что важное:\n"
+                    "иногда не нужно торопиться идти вперёд.\n"
+                    "Иногда стоит остановиться и подумать, куда идти.\n\n"
+                    "И как раз в этот момент он наткнулся на нечто необычное."
+                ),
+                "next": True,
+            },
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAICQ2lRK-wRSBVk2E8QFvby_kzaEGloAAJjDGsb0A2RSv6SGjwWBiCjAQADAgADeQADNgQ",
+                "caption": (
+                    "Вдалеке Вайбик увидел маленькую почтовую будку.\n"
+                    "На ней было написано:\n"
+                    "«Письма в Будущее» ✨\n\n"
+                    "Вайбик заглянул внутрь, и там была пустая коробка с надписью:\n"
+                    "«Ты можешь отправить себе письмо, если готова встретить будущее»."
+                ),
+                "next": True,
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Вайбик сказал, что отправлять письмо себе — это не просто задание.\n"
+                    "Это подарок себе, чтобы напомнить, что ты хочешь от следующего года.\n\n"
+                    "Напиши, что для тебя будет важным, чего ты хочешь достичь, что оставить позади."
+                ),
+                "no_menu": True
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Что для тебя будет важным в следующем году?"
+                ),
+                "no_menu": True
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Чего ты хочешь достичь?"
+                ),
+                "no_menu": True
+            },
+            {
+                "type": "text",
+                "text": (
+                    "Что хочешь оставить позади?"
+                ),
+                "no_menu": True
+            },
+            {
+                "type": "photo",
+                "file_id": "AgACAgIAAxkBAAICRWlRLdUebcSJIoo1lO4JWGf_MhOyAAJ3DGsb0A2RSm2cBS8c2vBXAQADAgADeQADNgQ",
+                "caption": (
+                    "✨ Искра №6 получена\n"
+                    "Письмо улетело в долгий путь до следующего года.\n\n"
+                    "Вайбик сказал, что будущее не приходит случайно,\n"
+                    "оно создаётся каждым твоим шагом.\n\n"
+                    "Следы не всегда видны, но они ведут нас к новому.\n"
+                    "Завтра будет важный день — зажжём ёлку и отгадаем слово! ✨"
+                ),
+                "buttons": [
+                    {"text": "✨ Забрать Искру", "action": "get_spark"},
+                ],
+            },
+        ],
+    },
+    7: {"title": "День 7 — (заполни)", 
+        "steps": [
+            {
+                "type":"text","text":"День 7 пока не заполнен 🙂","buttons":[{"text":"⬅️ В меню","action":"menu"}]
+            }
     ]},
 }
 
@@ -500,6 +579,12 @@ async def db_get_user(user_id: int) -> Optional[Dict[str, Any]]:
             "codes": row[6],
             "next_unlock_at": row[7],
         }
+
+async def db_get_all_user_ids() -> List[int]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cur = await db.execute("SELECT user_id FROM users")
+        rows = await cur.fetchall()
+    return [row[0] for row in rows]
 
 async def db_set_progress(user_id: int, active_day: int, active_step: int):
     async with aiosqlite.connect(DB_PATH) as db:
@@ -700,6 +785,11 @@ async def send_step(chat_id: int, day: int, step_idx: int):
             elif at == "text":
                 await bot.send_message(chat_id, a["text"])
 
+        if day == 6 and step_idx == 2:
+            await sleep(DAY6_LETTER_DELAY)
+            await db_set_progress(chat_id, active_day=6, active_step=3)
+            await send_step(chat_id, 6, 3)
+
     except (FileNotFoundError, ValueError) as err:
         await bot.send_message(
             chat_id,
@@ -724,6 +814,31 @@ async def cmd_start(m: Message):
         reply_markup=menu_kb()
     )
 
+@dp.message(F.text.startswith("/broadcast"))
+async def cmd_broadcast(m: Message):
+    if m.from_user.id != ADMIN_CHAT_ID:
+        await m.answer("Эта команда доступна только администратору.")
+        return
+
+    text = (m.text or "").partition(" ")[2].strip()
+    if not text:
+        await m.answer("Напиши так: /broadcast твой текст")
+        return
+
+    user_ids = await db_get_all_user_ids()
+    sent = 0
+    failed = 0
+    for user_id in user_ids:
+        try:
+            await bot.send_message(user_id, text)
+            sent += 1
+        except Exception:
+            failed += 1
+        if BROADCAST_DELAY:
+            await sleep(BROADCAST_DELAY)
+
+    await m.answer(f"Рассылка завершена. Успешно: {sent}, ошибок: {failed}.")
+
 @dp.callback_query(F.data == "menu")
 async def cb_menu(c: CallbackQuery):
     await c.message.answer("Меню:", reply_markup=menu_kb())
@@ -743,7 +858,7 @@ async def cb_progress(c: CallbackQuery):
     text = (
         f"✨ <b>Твой прогресс</b>\n\n"
         f"Открыто дней: <b>{opened_day}/7</b>\n"
-        f"Искры: <b>{len(sparks)}/7</b>\n"
+        f"Искры: <b>{len(sparks)}/6</b>\n"
         f"Буквы: <b>{len(codes)}/6</b>\n\n"
         f"Буквы: {', '.join(codes) if sparks else 'пока нет'}"
     )
@@ -934,6 +1049,52 @@ async def cb_spark(c: CallbackQuery):
         reply_markup=kb.as_markup()
     )
     await c.answer("Искра добавлена ✅")
+
+@dp.message(F.text & ~F.text.startswith("/"))
+async def day6_letter_flow(m: Message):
+    user = await db_get_user(m.from_user.id)
+    if not user or user["active_day"] != 6:
+        return
+
+    step_idx = user["active_step"]
+    if step_idx not in (3, 4, 5):
+        return
+
+    answer = (m.text or "").strip()
+    if len(answer) < DAY6_ANSWER_MIN_LEN:
+        await m.answer("Нужно минимум 20 символов. Попробуй чуть подробнее 🙂")
+        return
+
+    label_map = {
+        3: "Что для тебя будет важным в следующем году?",
+        4: "Чего ты хочешь достичь?",
+        5: "Что хочешь оставить позади?",
+    }
+    user_name = m.from_user.full_name
+    if m.from_user.username:
+        user_name = f"{user_name} (@{m.from_user.username})"
+    admin_text = (
+        f"✉️ День 6 — {label_map.get(step_idx, 'Ответ')}\n"
+        f"От: {html.escape(user_name)} (id {m.from_user.id})\n\n"
+        f"{html.escape(answer)}"
+    )
+    try:
+        await bot.send_message(ADMIN_CHAT_ID, admin_text)
+    except Exception:
+        pass
+
+    if step_idx == 3:
+        await db_set_progress(m.from_user.id, active_day=6, active_step=4)
+        await send_step(m.from_user.id, 6, 4)
+        return
+
+    if step_idx == 4:
+        await db_set_progress(m.from_user.id, active_day=6, active_step=5)
+        await send_step(m.from_user.id, 6, 5)
+        return
+
+    await db_set_progress(m.from_user.id, active_day=6, active_step=6)
+    await send_step(m.from_user.id, 6, 6)
 
 # (опционально) ловушка file_id стикеров: отправь стикер боту, он пришлёт file_id
 @dp.message(F.sticker)
